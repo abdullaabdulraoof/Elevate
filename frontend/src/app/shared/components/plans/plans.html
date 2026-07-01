@@ -1,0 +1,37 @@
+@if (loading) {
+  <p>Loading plans...</p>
+} @else {
+  <div class="plans-list">
+    @for (plan of plans; track plan._id) {
+      <div class="plan-card">
+        <div class="plan-info">
+          <strong class="plan-name">{{ plan.planName }}</strong>
+          <span class="plan-price">₹{{ plan.price }} / {{ plan.duration }} {{ plan.durationType }}</span>
+          @if (plan.features) {
+            <ul class="plan-features-list">
+              @for (f of plan.features.split(',').map(f => f.trim()).filter(f => f.length > 0); track f) {
+                <li>{{ f }}</li>
+              }
+            </ul>
+          }
+        </div>
+        <button
+          class="btn-select"
+          (click)="selectPlan.emit(plan._id)"
+          [disabled]="loading"
+        >
+          {{ loading && selectedPlanId === plan._id ? 'Please wait...' : 'Select' }}
+        </button>
+      </div>
+    }
+  </div>
+  <div class="skip-wrapper">
+    <button
+      class="btn-skip"
+      (click)="skip.emit()"
+      [disabled]="loading"
+    >
+      {{ loading && !selectedPlanId ? 'Please wait...' : 'Skip' }}
+    </button>
+  </div>
+}

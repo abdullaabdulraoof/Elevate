@@ -1,0 +1,86 @@
+<h1>Register</h1>
+
+<form [formGroup]="registerForm" (ngSubmit)="submitRegister()" style="margin-top:20px; max-width:350px;">
+  <div style="margin-bottom:10px;">
+    <input type="text" formControlName="username" placeholder="Username" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" />
+    @if (registerForm.get('username')?.invalid && registerForm.get('username')?.touched) {
+      <div style="color:red; font-size:12px; margin-top:2px;">Username is required (min 3 chars)</div>
+    }
+  </div>
+  <div style="margin-bottom:10px;">
+    <input type="email" formControlName="email" placeholder="Email" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" />
+    @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
+      <div style="color:red; font-size:12px; margin-top:2px;">Valid email is required</div>
+    }
+  </div>
+  <div style="margin-bottom:10px;">
+    <input type="password" formControlName="password" placeholder="Password" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" />
+    @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
+      <div style="color:red; font-size:12px; margin-top:2px;">Password is required (min 6 chars)</div>
+    }
+  </div>
+  <div style="margin-bottom:10px;">
+    <input type="text" formControlName="phone" placeholder="Phone number" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" />
+    @if (registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched) {
+      <div style="color:red; font-size:12px; margin-top:2px;">Phone number is required</div>
+    }
+  </div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+    <div>
+      <input type="number" formControlName="age" placeholder="Age" min="0" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" />
+      @if (registerForm.get('age')?.invalid && registerForm.get('age')?.touched) {
+        <div style="color:red; font-size:12px; margin-top:2px;">Age is required</div>
+      }
+    </div>
+    <div>
+      <select formControlName="gender" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+  </div>
+  <div style="margin-bottom:15px;">
+    <input type="text" formControlName="address" placeholder="Address" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" />
+    @if (registerForm.get('address')?.invalid && registerForm.get('address')?.touched) {
+      <div style="color:red; font-size:12px; margin-top:2px;">Address is required</div>
+    }
+  </div>
+
+  <!-- OTP Verification -->
+  <div style="margin-bottom:15px; padding:12px; background:#f5f5f5; border-radius:4px;">
+    <div style="margin-bottom:8px; font-size:13px; font-weight:bold;">Mobile Verification</div>
+    @if (!generatedOtp()) {
+      <button type="button" (click)="generateOtp()" style="padding:6px 14px; background:#6c757d; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px;">Send OTP</button>
+    } @else {
+      <div style="font-size:13px; margin-bottom:8px;">
+        OTP sent to your mobile: <strong style="font-size:18px; letter-spacing:4px; color:#007bff;">{{ generatedOtp() }}</strong>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <input type="text" [(ngModel)]="otpInput" [ngModelOptions]="{standalone: true}" placeholder="Enter OTP" maxlength="4" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; text-align:center; font-size:16px; letter-spacing:4px;" />
+        @if (!otpVerified()) {
+          <button type="button" (click)="verifyOtp()" style="padding:6px 14px; background:#28a745; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px;">Verify</button>
+        }
+      </div>
+      @if (otpVerified()) {
+        <div style="color:#28a745; font-size:13px; margin-top:6px;">✔ Verified</div>
+      }
+      @if (otpError()) {
+        <div style="color:red; font-size:13px; margin-top:6px;">{{ otpError() }}</div>
+      }
+    }
+  </div>
+
+  @if (errorMessage()) {
+    <div style="color:red; margin-bottom:10px;">{{ errorMessage() }}</div>
+  }
+  @if (successMessage()) {
+    <div style="color:green; margin-bottom:10px;">{{ successMessage() }}</div>
+  }
+  <button type="submit" [disabled]="isLoading()" style="padding:10px 20px; background:#007bff; color:#fff; border:none; border-radius:4px; cursor:pointer;">
+    {{ isLoading() ? 'Registering...' : 'Register' }}
+  </button>
+  <p style="margin-top:10px;">
+    Already have an account? <a routerLink="/login" style="color:#007bff;">Sign in</a>
+  </p>
+</form>

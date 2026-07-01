@@ -1,0 +1,7 @@
+<button class="pay-btn" (click)="pay()" [disabled]="processing()">
+  @if (processing()) {
+    Processing...
+  } @else {
+    {{ label }}
+  }
+</button>

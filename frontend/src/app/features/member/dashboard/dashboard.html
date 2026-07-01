@@ -1,0 +1,78 @@
+<div class="dashboard">
+  <header class="topbar">
+    <span class="logo">Elevate</span>
+    <div class="topbar-right">
+      <span class="user-name">{{ user()?.name }}</span>
+      <button class="btn-outline" (click)="logout()">Logout</button>
+    </div>
+  </header>
+
+  <main class="content">
+    @if (loading()) {
+      <p class="loading-text">Loading your dashboard...</p>
+    } @else {
+      <div class="welcome-card">
+        <div>
+          <h1>Welcome back, {{ member()?.name || user()?.name }}</h1>
+          <p class="subtitle">
+            @if (member()?.membershipStatus === 'active') {
+              <span class="badge badge-active">Active Member</span>
+            } @else {
+              <span class="badge badge-inactive">Inactive</span>
+            }
+          </p>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="card-header">Membership Plan</div>
+          <div class="card-body">
+            @if (plan(); as p) {
+              <div class="plan-name">{{ p.planName }}</div>
+              <div class="plan-meta">₹{{ p.price }} / {{ p.duration }} {{ p.durationType }}</div>
+              @if (p.features) {
+                <div class="plan-features">{{ p.features }}</div>
+              }
+            } @else {
+              <p class="muted">No plan selected.</p>
+              <a routerLink="/select-plan" class="btn-primary">Choose a Plan</a>
+            }
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">Profile</div>
+          <div class="card-body">
+            <div class="info-row"><span class="label">Email</span><span>{{ member()?.email || user()?.email }}</span></div>
+            <div class="info-row"><span class="label">Phone</span><span>{{ member()?.phone || '—' }}</span></div>
+            <div class="info-row"><span class="label">Age</span><span>{{ member()?.age || '—' }}</span></div>
+            <div class="info-row"><span class="label">Gender</span><span>{{ member()?.gender || '—' }}</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">Trainer</div>
+          <div class="card-body">
+            @if (member()?.assignedTrainer) {
+              <p>{{ member()!.assignedTrainer }}</p>
+            } @else {
+              <p class="muted">No trainer assigned.</p>
+            }
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">Goals</div>
+          <div class="card-body">
+            @if (member()?.goals) {
+              <p>{{ member()!.goals }}</p>
+            } @else {
+              <p class="muted">No goals set yet.</p>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </main>
+</div>

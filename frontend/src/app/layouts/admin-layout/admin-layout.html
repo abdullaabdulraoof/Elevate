@@ -1,0 +1,21 @@
+<div class="flex min-h-screen">
+  <div style="width:180px; background:#f5f5f5; padding:15px;">
+    <div style="margin-bottom:20px; font-weight:bold;">Elevate</div>
+    <nav>
+      @for (item of navItems; track item.route) {
+        <a [routerLink]="'/admin/' + item.route"
+           routerLinkActive="nav-active"
+           [routerLinkActiveOptions]="{exact:true}"
+           style="display:block; padding:5px 0; text-decoration:none; color:#333;">
+          {{item.label}}
+        </a>
+      }
+    </nav>
+    <div style="margin-top:30px;">
+      <button (click)="logout()" style="background:none; border:none; cursor:pointer; padding:5px 0; color:#333;">Logout</button>
+    </div>
+  </div>
+  <main style="flex:1; padding:20px;">
+    <router-outlet></router-outlet>
+  </main>
+</div>

@@ -1,0 +1,34 @@
+<div class="dashboard">
+  <header class="topbar">
+    <span class="logo">Elevate</span>
+    <div class="topbar-right">
+      <span class="user-name">{{ user()?.name }}</span>
+      <button class="btn-outline" (click)="logout()">Logout</button>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="welcome-card">
+      <h1>Welcome, {{ user()?.name }}</h1>
+      <p class="subtitle"><span class="badge badge-trainer">Trainer</span></p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-header">My Profile</div>
+        <div class="card-body">
+          <div class="info-row"><span class="label">Name</span><span>{{ user()?.name }}</span></div>
+          <div class="info-row"><span class="label">Email</span><span>{{ user()?.email }}</span></div>
+          <div class="info-row"><span class="label">Role</span><span>{{ user()?.role }}</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Quick Actions</div>
+        <div class="card-body">
+          <p class="muted">Member management and schedules coming soon.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,134 @@
+<div style="max-width:1100px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <h1 style="margin:0;">Trainers</h1>
+    <button (click)="openAddModal()" style="padding:8px 16px; background:#007bff; color:#fff; border:none; border-radius:4px; cursor:pointer;">+ Add Trainer</button>
+  </div>
+
+  @if (loadError()) {
+    <div style="color:red; margin-bottom:16px; padding:12px; background:#f8d7da; border:1px solid #f5c6cb; border-radius:4px;">{{ loadError() }}</div>
+  }
+
+  @if (loading()) {
+    <p>Loading...</p>
+  } @else {
+    <table style="width:100%; border-collapse:collapse; font-size:14px;">
+      <thead>
+        <tr style="background:#f5f5f5; text-align:left;">
+          <th style="padding:10px 12px; border-bottom:2px solid #ddd;">Name</th>
+          <th style="padding:10px 12px; border-bottom:2px solid #ddd;">Specialization</th>
+          <th style="padding:10px 12px; border-bottom:2px solid #ddd;">Experience</th>
+          <th style="padding:10px 12px; border-bottom:2px solid #ddd;">Phone</th>
+          <th style="padding:10px 12px; border-bottom:2px solid #ddd;">Gender</th>
+          <th style="padding:10px 12px; border-bottom:2px solid #ddd;">Members</th>
+          <th style="padding:10px 12px; border-bottom:2px solid #ddd;">Status</th>
+          <th style="padding:10px 12px; border-bottom:2px solid #ddd;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (trainer of trainers(); track trainer._id) {
+          <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:10px 12px; font-weight:500;">{{ trainer.userId.username || '—' }}</td>
+            <td style="padding:10px 12px;">{{ trainer.specialization }}</td>
+            <td style="padding:10px 12px;">{{ trainer.experience }} yrs</td>
+            <td style="padding:10px 12px;">{{ trainer.phone }}</td>
+            <td style="padding:10px 12px;">{{ trainer.gender }}</td>
+            <td style="padding:10px 12px;">{{ trainer.assignedMembers.length }}</td>
+            <td style="padding:10px 12px;">
+              <span style="display:inline-block; padding:2px 8px; border-radius:3px; font-size:12px;
+                {{ trainer.status === 'active' ? 'background:#d4edda; color:#155724;' : 'background:#f8d7da; color:#721c24;' }}">
+                {{ trainer.status }}
+              </span>
+            </td>
+            <td style="padding:10px 12px;">
+              <button (click)="openEditModal(trainer)" style="padding:4px 10px; margin-right:4px; border:1px solid #ccc; border-radius:3px; background:#fff; cursor:pointer; font-size:12px;">Edit</button>
+              <button (click)="deleteTrainer(trainer)" style="padding:4px 10px; border:1px solid #dc3545; border-radius:3px; background:#fff; color:#dc3545; cursor:pointer; font-size:12px;">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (showAddModal) {
+    <div style="position:fixed; inset:0; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; z-index:1000;">
+      <div style="background:#fff; padding:24px; border-radius:8px; min-width:400px;">
+        <h2 style="margin:0 0 16px;">Add Trainer</h2>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; margin-bottom:4px; font-size:13px;">User</label>
+          <select [(ngModel)]="addUserId" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+            <option value="">Select a user...</option>
+            @for (u of users(); track u._id) {
+              <option [value]="u._id">{{ u.username }} ({{ u.email }})</option>
+            }
+          </select>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; margin-bottom:4px; font-size:13px;">Specialization</label>
+          <input type="text" [(ngModel)]="addSpecialization" placeholder="e.g. Strength & Conditioning" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" />
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; margin-bottom:4px; font-size:13px;">Experience (years)</label>
+          <input type="number" [(ngModel)]="addExperience" min="0" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" />
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; margin-bottom:4px; font-size:13px;">Phone</label>
+          <input type="text" [(ngModel)]="addPhone" placeholder="Phone number" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" />
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block; margin-bottom:4px; font-size:13px;">Gender</label>
+          <select [(ngModel)]="addGender" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        @if (addError()) {
+          <div style="color:red; margin-bottom:10px; font-size:13px;">{{ addError() }}</div>
+        }
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+          <button (click)="closeAddModal()" style="padding:8px 16px; border:1px solid #ccc; border-radius:4px; background:#fff; cursor:pointer;">Cancel</button>
+          <button (click)="createTrainer()" style="padding:8px 16px; background:#007bff; color:#fff; border:none; border-radius:4px; cursor:pointer;">Create</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (editTrainer) {
+    <div style="position:fixed; inset:0; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; z-index:1000;">
+      <div style="background:#fff; padding:24px; border-radius:8px; min-width:400px;">
+        <h2 style="margin:0 0 16px;">Edit Trainer</h2>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; margin-bottom:4px; font-size:13px;">Specialization</label>
+          <input type="text" [(ngModel)]="editSpecialization" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" />
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; margin-bottom:4px; font-size:13px;">Experience (years)</label>
+          <input type="number" [(ngModel)]="editExperience" min="0" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" />
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; margin-bottom:4px; font-size:13px;">Phone</label>
+          <input type="text" [(ngModel)]="editPhone" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" />
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; margin-bottom:4px; font-size:13px;">Gender</label>
+          <select [(ngModel)]="editGender" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block; margin-bottom:4px; font-size:13px;">Status</label>
+          <select [(ngModel)]="editStatus" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+          <button (click)="closeEditModal()" style="padding:8px 16px; border:1px solid #ccc; border-radius:4px; background:#fff; cursor:pointer;">Cancel</button>
+          <button (click)="saveEdit()" style="padding:8px 16px; background:#007bff; color:#fff; border:none; border-radius:4px; cursor:pointer;">Save</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

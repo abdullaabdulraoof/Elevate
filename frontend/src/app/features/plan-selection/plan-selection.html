@@ -1,0 +1,36 @@
+<div class="selection-page">
+  @if (selectedPlan(); as plan) {
+    <h2>Complete Payment</h2>
+    <p class="subtitle">Pay ₹{{ plan.price }} to activate the <strong>{{ plan.planName }}</strong> plan.</p>
+
+    <div class="payment-box">
+      <app-payment
+        [amount]="plan.price"
+        [planId]="plan._id"
+        label="Pay ₹{{ plan.price }}"
+        (paymentSuccess)="onPaymentSuccess()"
+        (paymentError)="onPaymentError($event)"
+      />
+      <button class="btn-back" (click)="selectedPlan.set(null)">Cancel</button>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="error">{{ errorMessage() }}</div>
+    }
+  } @else {
+    <h2>Choose a Membership Plan</h2>
+    <p class="subtitle">Select a plan to get started, or skip to do it later.</p>
+
+    <app-plans
+      [plans]="plans()"
+      [loading]="loading()"
+      [selectedPlanId]="''"
+      (selectPlan)="selectPlan($event)"
+      (skip)="skip()"
+    />
+
+    @if (errorMessage()) {
+      <div class="error">{{ errorMessage() }}</div>
+    }
+  }
+</div>

@@ -1,0 +1,19 @@
+.pay-btn {
+  padding: 10px 24px;
+  background: #1a1a2e;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pay-btn:hover:not(:disabled) {
+  background: #16213e;
+}
+
+.pay-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
