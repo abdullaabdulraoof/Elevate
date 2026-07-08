@@ -12,6 +12,9 @@ const memberRoutes = require('./routes/memberRoute');
 const attendanceRoutes = require('./routes/attendenceRoute');
 const paymentRoutes = require('./routes/paymentRoute');
 const trainerRoutes = require('./routes/trainerRoute');
+const path = require("path");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./config/swagger");
 
 
 // Connect to MongoDB
@@ -20,6 +23,12 @@ const app = express()
 const port = 3000
 app.use(cors());
 app.use(express.json());
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+app.use(
+    "/uploads",
+    express.static(path.join(__dirname, "uploads"))
+);
 
 const morganFormat = ":method :url :status :response-time ms";
 app.use(

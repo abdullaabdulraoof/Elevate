@@ -1,7 +1,4 @@
-version: "3.9"
-
 services:
-
   backend:
     build: ./backend
     container_name: gym-backend
@@ -13,7 +10,12 @@ services:
       - ./backend/.env
 
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_started
+
+    restart: unless-stopped
 
   mongodb:
     image: mongo:8
@@ -26,6 +28,17 @@ services:
     volumes:
       - mongo-data:/data/db
 
-volumes:
+    restart: unless-stopped
 
+  redis:
+    image: redis:7
+
+    container_name: gym-redis
+
+    ports:
+      - "6379:6379"
+
+    restart: unless-stopped
+
+volumes:
   mongo-data:

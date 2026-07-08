@@ -35,4 +35,5 @@ router.get("/me", authenticate, allowRoles("member"), getMyProfile);
 router.delete("/:id", authenticate, allowRoles("admin"), deleteMember);
 router.patch("/me/plan", authenticate, allowRoles("member"), updateMyPlan);
 
+
 module.exports = router;

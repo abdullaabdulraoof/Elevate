@@ -1,5 +1,6 @@
 const Member = require("../models/member");
 const { validationResult } = require('express-validator');
+const notificationQueue = require("../queues/notificationQueue");
 
 exports.createMember = async (req, res) => {
   try {
@@ -8,6 +9,13 @@ exports.createMember = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
     const member = await Member.create(req.body);
+     // Add notification job to Redis queue
+    await notificationQueue.add("member-created", {
+      userId: member._id,
+      title: "Welcome to Elevate Gym",
+      message: "Your membership has been created successfully."
+    });
+
     res.status(201).json({
       success: true,
       message: "Member created successfully",

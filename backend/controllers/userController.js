@@ -70,3 +70,30 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to delete user" });
   }
 };
+exports.uploadProfilePicture = async (req, res) => {
+
+    if (!req.file) {
+
+        return res.status(400).json({
+            success: false,
+            message: "No file uploaded"
+        });
+
+    }
+
+    await User.findByIdAndUpdate(
+        req.user.id,
+        {
+            profilePicture: req.file.path
+        }
+    );
+
+    res.json({
+
+        success: true,
+
+        image: req.file.path
+
+    });
+
+};

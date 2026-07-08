@@ -1,13 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const { body } = require('express-validator');
+const upload = require("../middleware/upload");
 
 const {
   createUser,
   getUsers,
   getUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  uploadProfilePicture
 } = require("../controllers/userController");
 
 const { authenticate } = require("../middleware/auth");
@@ -28,5 +30,11 @@ router.put("/:id", authenticate, allowRoles("admin"), [
   body('phone').optional().isMobilePhone().isLength({ min: 10, max: 15 }).withMessage('Please enter a valid phone number'),
 ], updateUser);
 router.delete("/:id", authenticate, allowRoles("admin"), deleteUser);
+router.put(
+    "/profile-picture",
+    authenticate,
+    upload.single("profilePicture"),
+    uploadProfilePicture
+);
 
 module.exports = router;
