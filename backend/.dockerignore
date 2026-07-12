@@ -3,5 +3,6 @@ logs
 .env
 .git
 .gitignore
+coverage
 npm-debug.log
 README.md
