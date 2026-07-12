@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+require('dotenv').config();
 const authController = require('../controllers/authController');
 const { authenticate } = require('../middleware/auth');
 const {body, validationResult} = require('express-validator');
@@ -23,22 +24,7 @@ const {registerLimiter} = require('../middleware/rateLimiter');
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 example: admin@gmail.com
- *               password:
- *                 type: string
- *                 example: Password@123
- *     responses:
- *       200:
- *         description: Login successful
- *       401:
- *         description: Invalid credentials
+ *             $ref: '#/components/schemas/LoginRequest'
  */
 router.post('/login',[body('email').isEmail().withMessage('Please enter a valid email'), body('password').isLength({ min: 6, max: 100 }).withMessage('Password must be between 6 and 100 characters')], loginLimiter, authController.login);
 /**
@@ -52,23 +38,7 @@ router.post('/login',[body('email').isEmail().withMessage('Please enter a valid 
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - username
- *               - email
- *               - password
- *             properties:
- *               username:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       201:
- *         description: User registered successfully
- *       400:
- *         description: Validation error
+ *            $ref: '#/components/schemas/RegisterRequest'
  */
 router.post('/register',[body('email').isEmail().withMessage('Please enter a valid email'), body('password').isLength({ min: 6, max: 100 }).withMessage('Password must be between 6 and 100 characters'),body('username').not().isEmpty().withMessage('Username is required'),body('phone').optional().isMobilePhone().withMessage('Please enter a valid phone number'),body('age').optional().isInt({ min: 0 }).withMessage('Age must be a positive integer'),body('gender').optional().isIn(['male', 'female', 'other']).withMessage('Gender must be male, female, or other')], registerLimiter, authController.register);
 /**
