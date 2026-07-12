@@ -4,10 +4,18 @@ const Member = require('../models/member');
 const { validationResult } = require('express-validator');
 const Razorpay = require('razorpay');
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+let razorpay = null;
+
+// Initialize Razorpay only if credentials exist
+if (
+  process.env.RAZORPAY_KEY_ID &&
+  process.env.RAZORPAY_KEY_SECRET
+) {
+  razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+}
 
 exports.createOrder = async (req, res) => {
   try {
@@ -21,7 +29,12 @@ exports.createOrder = async (req, res) => {
       currency: 'INR',
       receipt: `receipt_${Date.now()}`,
     };
-
+if (!razorpay) {
+  return res.status(500).json({
+    success: false,
+    message: "Razorpay is not configured.",
+  });
+}
     const order = await razorpay.orders.create(options);
 
     res.status(201).json({
