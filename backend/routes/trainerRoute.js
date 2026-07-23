@@ -6,7 +6,8 @@ const {
   getTrainerById,
   createTrainer,
   updateTrainer,
-  deleteTrainer
+  deleteTrainer,
+  getAllTrainers
 } = require("../controllers/trainerController");
 
 const { authenticate } = require("../middleware/auth");
@@ -22,5 +23,5 @@ router.post("/", authenticate, allowRoles("admin"), [
 ], createTrainer);
 router.put("/:id", authenticate, allowRoles("admin"), updateTrainer);
 router.delete("/:id", authenticate, allowRoles("admin"), deleteTrainer);
-
+router.get("/all", authenticate, allowRoles("admin"), getAllTrainers);
 module.exports = router;

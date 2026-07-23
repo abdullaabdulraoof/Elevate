@@ -8,7 +8,8 @@ const {
   updateMember,
   deleteMember,
   updateMyPlan,
-  getMyProfile
+  getMyProfile,
+  getAllMembers
 } = require("../controllers/memberController");
 
 const { authenticate } = require("../middleware/auth");
@@ -34,6 +35,6 @@ router.put("/:id", authenticate , allowRoles("admin", "receptionist"),[
 router.get("/me", authenticate, allowRoles("member"), getMyProfile);
 router.delete("/:id", authenticate, allowRoles("admin"), deleteMember);
 router.patch("/me/plan", authenticate, allowRoles("member"), updateMyPlan);
-
+router.get("/all", authenticate, allowRoles("admin"), getAllMembers);
 
 module.exports = router;

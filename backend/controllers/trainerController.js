@@ -1,6 +1,7 @@
 const Trainer = require("../models/trainer");
 const { validationResult } = require("express-validator");
 const logger = require('../logger');
+const pagination = require("../utils/pagination");
 
 exports.getTrainers = async (req, res) => {
   try {
@@ -71,3 +72,32 @@ exports.deleteTrainer = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+const getAllTrainers = async (req, res) => {
+    try {
+        const { page, limit } = req.query;
+        const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
+        const membership = await Trainer.find().skip(skip).limit(limit);
+        //calculate metadata
+        const totalPages = Math.ceil(await Trainer.countDocuments() / pageLimit);
+        const hasNextPage = currentPage < totalPages;
+        const hasPreviousPage = currentPage > 1;
+        const totalItems = await Trainer.countDocuments();
+        res.status(200).json({
+            success: true,
+            data: Trainer,
+            pagintion: {
+                page: currentPage,
+                limit: pageLimit,
+                totalPages,
+                hasNextPage,
+                hasPreviousPage,
+                totalItems
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch members"
+        });
+    }
+}

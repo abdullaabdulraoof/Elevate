@@ -1,7 +1,7 @@
 const Member = require("../models/member");
 const { validationResult } = require('express-validator');
 const notificationQueue = require("../queues/notificationQueue");
-
+const pagination = require("../utils/pagination");
 exports.createMember = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -130,3 +130,33 @@ exports.updateMyPlan = async (req, res) => {
     });
   }
 };
+
+exports.getAllMembers = async(req,res)=>{
+  try {
+    const { page, limit } = req.query;
+    const { skip,page:currentPage,limit:pageLimit } = pagination(page, limit);
+    const members = await Member.find().skip(skip).limit(limit);
+    //calculate metadata
+    const totalPages = Math.ceil(await Member.countDocuments() / pageLimit);
+    const hasNextPage = currentPage < totalPages;
+    const hasPreviousPage = currentPage > 1;
+    const totalItems = await Member.countDocuments();
+    res.status(200).json({
+      success: true,
+      data: members,
+     pagintion:{
+      page: currentPage,
+      limit: pageLimit,
+      totalPages,
+      hasNextPage,
+      hasPreviousPage,
+      totalItems
+     }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch members"
+    });
+  }
+}

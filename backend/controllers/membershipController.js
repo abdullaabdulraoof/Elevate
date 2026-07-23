@@ -1,8 +1,9 @@
 const Membership = require("../models/membership");
 const validationResult = require('express-validator').validationResult;
 const logger = require('../logger');
+const pagination = require("../utils/pagination");
 
-exports.createMembership = async (req, res) => {    
+exports.createMembership = async (req, res) => {
     try {
         const membership = await Membership.create(req.body);
         const errors = validationResult(req);
@@ -86,14 +87,14 @@ exports.updateMembership = async (req, res) => {
                 success: false,
                 message: "Membership not found"
             });
-        }   
+        }
         logger.info("Membership updated successfully");
         res.status(200).json({
             success: true,
             message: "Membership updated successfully",
             data: membership
         });
-    } catch (error) {   
+    } catch (error) {
         logger.error("Error updating membership");
         res.status(500).json({
             success: false,
@@ -106,7 +107,7 @@ exports.deleteMembership = async (req, res) => {
     try {
         const membership = await Membership.findByIdAndDelete(req.params.id);
         if (!membership) {
-            return res.status(404).json({   
+            return res.status(404).json({
                 success: false,
                 message: "Membership not found"
             });
@@ -125,3 +126,33 @@ exports.deleteMembership = async (req, res) => {
         });
     }
 };
+
+const getAllMembership = async (req, res) => {
+    try {
+        const { page, limit } = req.query;
+        const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
+        const membership = await Membership.find().skip(skip).limit(limit);
+        //calculate metadata
+        const totalPages = Math.ceil(await Membership.countDocuments() / pageLimit);
+        const hasNextPage = currentPage < totalPages;
+        const hasPreviousPage = currentPage > 1;
+        const totalItems = await Membership.countDocuments();
+        res.status(200).json({
+            success: true,
+            data: membership,
+            pagintion: {
+                page: currentPage,
+                limit: pageLimit,
+                totalPages,
+                hasNextPage,
+                hasPreviousPage,
+                totalItems
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch members"
+        });
+    }
+}
