@@ -112,10 +112,12 @@ exports.createPayment = async (req, res) => {
 exports.getPayments = async (req, res) => {
   try {
     const payments = await Payment.find()
+      .select("memberId membershipId amount paymentMethod paymentStatus paymentDate transactionId receivedBy")
       .populate('memberId', 'name email phone')
-      .populate('membershipId')
+      .populate({ path: 'membershipId', select: 'planName price duration durationType' })
       .populate('receivedBy', 'name role')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     apiResponse.success(res, 200, 'Payments fetched successfully', payments);
   } catch (error) {
@@ -126,9 +128,11 @@ exports.getPayments = async (req, res) => {
 exports.getPaymentById = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id)
+      .select("memberId membershipId amount paymentMethod paymentStatus paymentDate transactionId receivedBy")
       .populate('memberId', 'name email phone')
-      .populate('membershipId')
-      .populate('receivedBy', 'name role');
+      .populate({ path: 'membershipId', select: 'planName price duration durationType' })
+      .populate('receivedBy', 'name role')
+      .lean();
 
     if (!payment) {
       return apiResponse.error(res, 404, 'Payment not found');

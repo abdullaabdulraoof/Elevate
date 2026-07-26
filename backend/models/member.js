@@ -21,7 +21,7 @@ const memberSchema = new mongoose.Schema(
     weight: Number,
     goals: {
       type: String,
-      inedx: true
+      index: true
     },
     membershipPlan: {
       type: mongoose.Schema.Types.ObjectId,
@@ -31,7 +31,8 @@ const memberSchema = new mongoose.Schema(
     membershipStatus: {
       type: String,
       enum: ["free", "active", "inactive"],
-      default: "free"
+      default: "free",
+      index: true
     },
     assignedTrainer: {
       type: mongoose.Schema.Types.ObjectId,
@@ -42,5 +43,7 @@ const memberSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+memberSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model("Member", memberSchema);

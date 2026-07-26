@@ -37,7 +37,8 @@ const trainerSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["active", "inactive"],
-      default: "active"
+      default: "active",
+      index: true
     }
   },
   { timestamps: true }

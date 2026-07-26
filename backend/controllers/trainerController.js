@@ -9,7 +9,10 @@ const fieldSelection = require("../utils/fieldSelection");
 const apiResponse = require("../utils/apiResponse");
 exports.getTrainers = async (req, res) => {
   try {
-    const trainers = await Trainer.find().populate("userId", "username email");
+    const trainers = await Trainer.find()
+      .select("userId specialization experience phone gender status")
+      .populate("userId", "username email")
+      .lean();
     apiResponse.success(res, 200, "Trainers fetched successfully", trainers);
   } catch (error) {
     logger.error("Error fetching trainers: " + error.message);
@@ -19,7 +22,10 @@ exports.getTrainers = async (req, res) => {
 
 exports.getTrainerById = async (req, res) => {
   try {
-    const trainer = await Trainer.findById(req.params.id).populate("userId", "username email");
+    const trainer = await Trainer.findById(req.params.id)
+      .select("userId specialization experience phone gender status")
+      .populate("userId", "username email")
+      .lean();
     if (!trainer) {
       return apiResponse.error(res, 404, "Trainer not found");
     }
@@ -38,7 +44,10 @@ exports.createTrainer = async (req, res) => {
     }
     const { userId, specialization, experience, phone, gender } = req.body;
     const newTrainer = await Trainer.create({ userId, specialization, experience, phone, gender });
-    const populated = await Trainer.findById(newTrainer._id).populate("userId", "username email");
+    const populated = await Trainer.findById(newTrainer._id)
+      .select("userId specialization experience phone gender status")
+      .populate("userId", "username email")
+      .lean();
     apiResponse.success(res, 201, "Trainer created successfully", populated);
   } catch (error) {
     logger.error("Error creating trainer: " + error.message);
@@ -78,7 +87,7 @@ exports.deleteTrainer = async (req, res) => {
 };
 exports.getAllTrainers = async (req, res) => {
   try {
-    const { page, limit, sort, searching, fields } = req.query;
+    const { page, limit, sort, searching: searchTerm, fields } = req.query;
     const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
     const allowedFields = [
       "name",
@@ -94,13 +103,20 @@ exports.getAllTrainers = async (req, res) => {
     const allowedFilters = ['specialization', 'experience'];
     const filter = filtering(req.query, allowedFilters);
 
-    searching(filter, search, ["name", "email", "phone"]);
+    searching(filter, searchTerm, ["name", "email", "phone"]);
 
     const allowedSortFields = ["name", "email", "phone", "status", "gender", "createdAt"];
     const { sortField } = sorting(sort, allowedSortFields);
 
-    const trainers = await Trainer.find(filter).select(selectedFields).sort(sortField).skip(skip).limit(pageLimit);
-    const totalItems = await Trainer.countDocuments(filter);
+    const [totalItems, trainers] = await Promise.all([
+      Trainer.countDocuments(filter),
+      Trainer.find(filter)
+        .select(selectedFields)
+        .sort(sortField)
+        .skip(skip)
+        .limit(pageLimit)
+        .lean()
+    ]);
     const totalPages = Math.ceil(totalItems / pageLimit);
     const hasNextPage = currentPage < totalPages;
     const hasPreviousPage = currentPage > 1;

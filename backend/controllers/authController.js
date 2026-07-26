@@ -17,7 +17,7 @@ module.exports.register = async (req, res, next) => {
       logger.warn(`Failed registration attempt for email: ${email}`);
       return res.status(400).json({ errors: errors.array() });
     }
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email }).select("_id").lean();
 
     if (userExists) {
       logger.warn(`Failed registration attempt for email: ${email}`);
@@ -118,7 +118,7 @@ module.exports.login = async (req, res,   next) => {
 }
 module.exports.getProfile = async (req, res, next) => {
     try {
-        const user = await User.findById(req.user.id).select('-password');
+        const user = await User.findById(req.user.id).select('-password').lean();
         if (!user) {
             return apiResponse.error(res, 404, 'User not found');
         }

@@ -10,7 +10,7 @@ exports.createUser = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
     const { username, email, password, role } = req.body;
-    const existing = await User.findOne({ $or: [{ email }, { username }] });
+    const existing = await User.findOne({ $or: [{ email }, { username }] }).select("_id").lean();
     if (existing) {
       return apiResponse.error(res, 400, 'Username or email already exists');
     }
@@ -25,7 +25,10 @@ exports.createUser = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password").sort({ createdAt: -1 });
+    const users = await User.find()
+      .select("username email role phone profilePicture createdAt isActive")
+      .sort({ createdAt: -1 })
+      .lean();
     apiResponse.success(res, 200, "Users fetched successfully", users);
   } catch (error) {
     apiResponse.error(res, 500, "Failed to fetch users");
@@ -34,7 +37,9 @@ exports.getUsers = async (req, res) => {
 
 exports.getUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select("-password");
+    const user = await User.findById(req.params.id)
+      .select("username email role phone profilePicture createdAt isActive")
+      .lean();
     if (!user) {
       return apiResponse.error(res, 404, "User not found");
     }

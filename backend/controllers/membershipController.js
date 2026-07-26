@@ -24,9 +24,11 @@ exports.createMembership = async (req, res) => {
 exports.getMemberships = async (req, res) => {
     try {
         const memberships = await Membership.find()
+            .select("memberId planId membershipStatus startDate endDate assignedTrainer")
             .populate("memberId", "name email phone")
             .populate("planId", "planName price duration durationType")
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
         logger.info("Memberships fetched successfully");
         apiResponse.success(res, 200, "Memberships fetched successfully", memberships);
     } catch (error) {
@@ -38,8 +40,10 @@ exports.getMemberships = async (req, res) => {
 exports.getMembershipById = async (req, res) => {
     try {
         const membership = await Membership.findById(req.params.id)
+            .select("memberId planId membershipStatus startDate endDate assignedTrainer")
             .populate("memberId", "name email phone")
-            .populate("planId", "planName price duration durationType");
+            .populate("planId", "planName price duration durationType")
+            .lean();
         if (!membership) {
             return apiResponse.error(res, 404, "Membership not found");
         }
@@ -88,9 +92,9 @@ exports.deleteMembership = async (req, res) => {
     }
 };
 
-const getAllMembership = async (req, res) => {
+exports.getAllMembership = async (req, res) => {
     try {
-        const { page, limit, sort, searching, fields } = req.query;
+        const { page, limit, sort, searching: searchTerm, fields } = req.query;
         const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
 
         const allowedFields = [
@@ -107,17 +111,20 @@ const getAllMembership = async (req, res) => {
         const allowedFilters = ["status", "gender", "membershipPlan"];
         const filter = filtering(req.query, allowedFilters);
 
-        searching(filter, search, ["name", "email", "phone"]);
+        searching(filter, searchTerm, ["name", "email", "phone"]);
 
         const allowedSortFields = ["name", "email", "phone", "status", "gender", "createdAt"];
         const { sortField } = sorting(sort, allowedSortFields);
 
-        const totalItems = await Membership.countDocuments(filter);
-        const membership = await Membership.find(filter)
-            .select(selectedFields)
-            .sort(sortField)
-            .skip(skip)
-            .limit(pageLimit);
+        const [totalItems, membership] = await Promise.all([
+            Membership.countDocuments(filter),
+            Membership.find(filter)
+                .select(selectedFields)
+                .sort(sortField)
+                .skip(skip)
+                .limit(pageLimit)
+                .lean()
+        ]);
 
         const totalPages = Math.ceil(totalItems / pageLimit);
         const hasNextPage = currentPage < totalPages;

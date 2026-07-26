@@ -17,7 +17,10 @@ exports.createPlan = async (req, res) => {
 
 exports.getPlans = async (req, res) => {
   try {
-    const plans = await Plan.find().sort({ createdAt: -1 });
+    const plans = await Plan.find()
+      .select("planName duration durationType price features status ispopular macFreeDays maxTrainingSessions")
+      .sort({ createdAt: -1 })
+      .lean();
     apiResponse.success(res, 200, "Plans fetched successfully", plans);
   } catch (error) {
     apiResponse.error(res, 500, "Failed to fetch plans");
@@ -26,7 +29,9 @@ exports.getPlans = async (req, res) => {
 
 exports.getPlanById = async (req, res) => {
   try {
-    const plan = await Plan.findById(req.params.id);
+    const plan = await Plan.findById(req.params.id)
+      .select("planName duration durationType price features status ispopular macFreeDays maxTrainingSessions")
+      .lean();
     if (!plan) {
       return apiResponse.error(res, 404, "Plan not found");
     }

@@ -32,7 +32,8 @@ const planSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["active", "inactive"],
-      default: "active"
+      default: "active",
+      index: true
     },
     ispopular: {
       type: Boolean,

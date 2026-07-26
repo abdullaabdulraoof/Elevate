@@ -101,9 +101,11 @@ exports.checkOutAttendance = async (req, res) => {
 exports.getAttendance = async (req, res) => {
   try {
     const attendance = await Attendance.find()
+      .select("memberId date checkInTime checkOutTime status markedBy")
       .populate("memberId", "name email phone")
       .populate("markedBy", "name role")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     apiResponse.success(res, 200, "Attendance fetched successfully", attendance);
   } catch (error) {
@@ -115,9 +117,11 @@ exports.getAttendance = async (req, res) => {
 exports.getAttendanceByMember = async (req, res) => {
   try {
     const attendance = await Attendance.find({ memberId: req.params.id })
+      .select("memberId date checkInTime checkOutTime status markedBy")
       .populate("memberId", "name email phone")
       .populate("markedBy", "name role")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     apiResponse.success(res, 200, "Member attendance fetched successfully", attendance);
   } catch (error) {
