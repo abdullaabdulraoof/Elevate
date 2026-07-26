@@ -76,7 +76,7 @@ exports.deleteTrainer = async (req, res) => {
     apiResponse.error(res, 500, error.message);
   }
 };
-const getAllTrainers = async (req, res) => {
+exports.getAllTrainers = async (req, res) => {
   try {
     const { page, limit, sort, searching, fields } = req.query;
     const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
