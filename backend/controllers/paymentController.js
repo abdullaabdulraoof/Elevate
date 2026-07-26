@@ -3,6 +3,7 @@ const Payment = require('../models/payment');
 const Member = require('../models/member');
 const { validationResult } = require('express-validator');
 const Razorpay = require('razorpay');
+const apiResponse = require('../utils/apiResponse');
 
 let razorpay = null;
 
@@ -21,7 +22,7 @@ exports.createOrder = async (req, res) => {
   try {
     const { amount } = req.body;
     if (!amount || amount <= 0) {
-      return res.status(400).json({ success: false, message: 'Amount must be a positive number' });
+      return apiResponse.error(res, 400, 'Amount must be a positive number');
     }
 
     const options = {
@@ -30,23 +31,17 @@ exports.createOrder = async (req, res) => {
       receipt: `receipt_${Date.now()}`,
     };
 if (!razorpay) {
-  return res.status(500).json({
-    success: false,
-    message: "Razorpay is not configured.",
-  });
+  return apiResponse.error(res, 500, "Razorpay is not configured.");
 }
     const order = await razorpay.orders.create(options);
 
-    res.status(201).json({
-      success: true,
-      data: {
-        order_id: order.id,
-        amount: order.amount,
-        currency: order.currency,
-      },
+    apiResponse.success(res, 201, "Order created successfully", {
+      order_id: order.id,
+      amount: order.amount,
+      currency: order.currency,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to create order' });
+    apiResponse.error(res, 500, 'Failed to create order');
   }
 };
 
@@ -55,7 +50,7 @@ exports.verifyPayment = async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, memberId, planId } = req.body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return res.status(400).json({ success: false, message: 'Missing payment verification fields' });
+      return apiResponse.error(res, 400, 'Missing payment verification fields');
     }
 
     const body = razorpay_order_id + '|' + razorpay_payment_id;
@@ -65,7 +60,7 @@ exports.verifyPayment = async (req, res) => {
       .digest('hex');
 
     if (expectedSignature !== razorpay_signature) {
-      return res.status(400).json({ success: false, message: 'Invalid payment signature' });
+      return apiResponse.error(res, 400, 'Invalid payment signature');
     }
 
     let resolvedMemberId = memberId;
@@ -83,13 +78,9 @@ exports.verifyPayment = async (req, res) => {
       paymentDate: new Date(),
     });
 
-    res.status(200).json({
-      success: true,
-      message: 'Payment verified successfully',
-      data: payment,
-    });
+    apiResponse.success(res, 200, 'Payment verified successfully', payment);
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to verify payment' });
+    apiResponse.error(res, 500, 'Failed to verify payment');
   }
 };
 
@@ -112,16 +103,9 @@ exports.createPayment = async (req, res) => {
     };
     const order = await razorpay.orders.create(options);
 
-    res.status(201).json({
-      success: true,
-      message: 'Payment created successfully',
-      data: order,
-    });
+    apiResponse.success(res, 201, 'Payment created successfully', order);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create payment',
-    });
+    apiResponse.error(res, 500, 'Failed to create payment');
   }
 };
 
@@ -133,15 +117,9 @@ exports.getPayments = async (req, res) => {
       .populate('receivedBy', 'name role')
       .sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
-      data: payments,
-    });
+    apiResponse.success(res, 200, 'Payments fetched successfully', payments);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch payments',
-    });
+    apiResponse.error(res, 500, 'Failed to fetch payments');
   }
 };
 
@@ -153,21 +131,12 @@ exports.getPaymentById = async (req, res) => {
       .populate('receivedBy', 'name role');
 
     if (!payment) {
-      return res.status(404).json({
-        success: false,
-        message: 'Payment not found',
-      });
+      return apiResponse.error(res, 404, 'Payment not found');
     }
 
-    res.status(200).json({
-      success: true,
-      data: payment,
-    });
+    apiResponse.success(res, 200, 'Payment fetched successfully', payment);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch payment',
-    });
+    apiResponse.error(res, 500, 'Failed to fetch payment');
   }
 };
 
@@ -181,22 +150,12 @@ exports.updatePayment = async (req, res) => {
     const payment = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true });
 
     if (!payment) {
-      return res.status(404).json({
-        success: false,
-        message: 'Payment not found',
-      });
+      return apiResponse.error(res, 404, 'Payment not found');
     }
 
-    res.status(200).json({
-      success: true,
-      message: 'Payment updated successfully',
-      data: payment,
-    });
+    apiResponse.success(res, 200, 'Payment updated successfully', payment);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update payment',
-    });
+    apiResponse.error(res, 500, 'Failed to update payment');
   }
 };
 
@@ -205,20 +164,11 @@ exports.deletePayment = async (req, res) => {
     const payment = await Payment.findByIdAndDelete(req.params.id);
 
     if (!payment) {
-      return res.status(404).json({
-        success: false,
-        message: 'Payment not found',
-      });
+      return apiResponse.error(res, 404, 'Payment not found');
     }
 
-    res.status(200).json({
-      success: true,
-      message: 'Payment deleted successfully',
-    });
+    apiResponse.success(res, 200, 'Payment deleted successfully');
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to delete payment',
-    });
+    apiResponse.error(res, 500, 'Failed to delete payment');
   }
 };

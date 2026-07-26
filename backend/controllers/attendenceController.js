@@ -1,5 +1,6 @@
 const Attendance = require("../models/attendence");
-const validationResult = require('express-validator').validationResult;
+const { validationResult } = require('express-validator');
+const apiResponse = require("../utils/apiResponse");
 
 const getDateRange = (date) => {
   const start = new Date(date);
@@ -22,16 +23,9 @@ exports.markAttendance = async (req, res) => {
       markedBy: req.user.id
     });
 
-    res.status(201).json({
-      success: true,
-      message: "Attendance marked successfully",
-      data: attendance
-    });
+    apiResponse.success(res, 201, "Attendance marked successfully", attendance);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to mark attendance"
-    });
+    apiResponse.error(res, 500, "Failed to mark attendance");
   }
 };
 
@@ -66,16 +60,9 @@ exports.checkInAttendance = async (req, res) => {
       });
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Check-in recorded successfully",
-      data: attendance
-    });
+    apiResponse.success(res, 200, "Check-in recorded successfully", attendance);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to record check-in"
-    });
+    apiResponse.error(res, 500, "Failed to record check-in");
   }
 };
 
@@ -97,26 +84,16 @@ exports.checkOutAttendance = async (req, res) => {
     });
 
     if (!attendance) {
-      return res.status(404).json({
-        success: false,
-        message: "Attendance record not found for checkout"
-      });
+      return apiResponse.error(res, 404, "Attendance record not found for checkout");
     }
 
     attendance.checkOutTime = new Date().toISOString();
     attendance.markedBy = req.user.id;
     await attendance.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Check-out recorded successfully",
-      data: attendance
-    });
+    apiResponse.success(res, 200, "Check-out recorded successfully", attendance);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to record check-out"
-    });
+    apiResponse.error(res, 500, "Failed to record check-out");
   }
 };
 
@@ -128,15 +105,9 @@ exports.getAttendance = async (req, res) => {
       .populate("markedBy", "name role")
       .sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
-      data: attendance
-    });
+    apiResponse.success(res, 200, "Attendance fetched successfully", attendance);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch attendance"
-    });
+    apiResponse.error(res, 500, "Failed to fetch attendance");
   }
 };
 
@@ -148,15 +119,9 @@ exports.getAttendanceByMember = async (req, res) => {
       .populate("markedBy", "name role")
       .sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
-      data: attendance
-    });
+    apiResponse.success(res, 200, "Member attendance fetched successfully", attendance);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch member attendance"
-    });
+    apiResponse.error(res, 500, "Failed to fetch member attendance");
   }
 };
 
@@ -170,22 +135,12 @@ exports.updateAttendance = async (req, res) => {
     );
 
     if (!attendance) {
-      return res.status(404).json({
-        success: false,
-        message: "Attendance not found"
-      });
+      return apiResponse.error(res, 404, "Attendance not found");
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Attendance updated successfully",
-      data: attendance
-    });
+    apiResponse.success(res, 200, "Attendance updated successfully", attendance);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to update attendance"
-    });
+    apiResponse.error(res, 500, "Failed to update attendance");
   }
 };
 
@@ -195,20 +150,11 @@ exports.deleteAttendance = async (req, res) => {
     const attendance = await Attendance.findByIdAndDelete(req.params.id);
 
     if (!attendance) {
-      return res.status(404).json({
-        success: false,
-        message: "Attendance not found"
-      });
+      return apiResponse.error(res, 404, "Attendance not found");
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Attendance deleted successfully"
-    });
+    apiResponse.success(res, 200, "Attendance deleted successfully");
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete attendance"
-    });
+    apiResponse.error(res, 500, "Failed to delete attendance");
   }
 };

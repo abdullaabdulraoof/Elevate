@@ -6,6 +6,7 @@ const sorting = require("../utils/sorting");
 const searching = require("../utils/searching");
 const filtering = require("../utils/filtering");
 const fieldSelection = require("../utils/fieldSelection");
+const apiResponse = require("../utils/apiResponse");
 exports.createMember = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -20,16 +21,18 @@ exports.createMember = async (req, res) => {
       message: "Your membership has been created successfully."
     });
 
-    res.status(201).json({
-      success: true,
-      message: "Member created successfully",
-      data: member
-    });
+    apiResponse.success(
+      res,
+      201,
+      "Member created successfully",
+      member
+    );
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to create member"
-    });
+    apiResponse.error(
+      res,
+      500,
+      "Failed to create member"
+    );
   }
 };
 
@@ -39,15 +42,9 @@ exports.getMembers = async (req, res) => {
       .populate({ path: "assignedTrainer", populate: { path: "userId", select: "username" } })
       .sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
-      data: members
-    });
+    apiResponse.success(res, 200, "Members fetched successfully", members);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch members"
-    });
+    apiResponse.error(res, 500, "Failed to fetch members");
   }
 };
 
@@ -63,18 +60,11 @@ exports.updateMember = async (req, res) => {
       { new: true }
     ).populate({ path: "assignedTrainer", populate: { path: "userId", select: "username" } });
     if (!member) {
-      return res.status(404).json({ success: false, message: "Member not found" });
+      return apiResponse.error(res, 404, "Member not found");
     }
-    res.status(200).json({
-      success: true,
-      message: "Member updated successfully",
-      data: member
-    });
+    apiResponse.success(res, 200, "Member updated successfully", member);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to update member"
-    });
+    apiResponse.error(res, 500, "Failed to update member");
   }
 };
 
@@ -82,17 +72,11 @@ exports.deleteMember = async (req, res) => {
   try {
     const member = await Member.findByIdAndDelete(req.params.id);
     if (!member) {
-      return res.status(404).json({ success: false, message: "Member not found" });
+      return apiResponse.error(res, 404, "Member not found");
     }
-    res.status(200).json({
-      success: true,
-      message: "Member deleted successfully"
-    });
+    apiResponse.success(res, 200, "Member deleted successfully");
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete member"
-    });
+    apiResponse.error(res, 500, "Failed to delete member");
   }
 };
 
@@ -100,11 +84,11 @@ exports.getMyProfile = async (req, res) => {
   try {
     const member = await Member.findOne({ email: req.user.email });
     if (!member) {
-      return res.status(404).json({ success: false, message: "Member not found" });
+      return apiResponse.error(res, 404, "Member not found");
     }
-    res.status(200).json({ success: true, data: member });
+    apiResponse.success(res, 200, "Profile fetched successfully", member);
   } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to fetch profile" });
+    apiResponse.error(res, 500, "Failed to fetch profile");
   }
 };
 
@@ -112,7 +96,7 @@ exports.updateMyPlan = async (req, res) => {
   try {
     const { planId } = req.body;
     if (!planId) {
-      return res.status(400).json({ success: false, message: "Plan ID is required" });
+      return apiResponse.error(res, 400, "Plan ID is required");
     }
     const member = await Member.findOneAndUpdate(
       { email: req.user.email },
@@ -120,18 +104,11 @@ exports.updateMyPlan = async (req, res) => {
       { new: true }
     ).populate("membershipPlan");
     if (!member) {
-      return res.status(404).json({ success: false, message: "Member not found" });
+      return apiResponse.error(res, 404, "Member not found");
     }
-    res.status(200).json({
-      success: true,
-      message: "Membership plan updated successfully",
-      data: member
-    });
+    apiResponse.success(res, 200, "Membership plan updated successfully", member);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to update membership plan"
-    });
+    apiResponse.error(res, 500, "Failed to update membership plan");
   }
 };
 
@@ -148,61 +125,36 @@ exports.getAllMembers = async (req, res) => {
       "membershipPlan",
       "createdAt"
     ];
-    const selectedFields = fieldSelection(
-      fields,
-      allowedFields
-    );
+    const selectedFields = fieldSelection(fields, allowedFields);
 
-    //filtering
     const allowedFilters = ['status', 'gender', 'membershipPlan'];
     const filter = filtering(req.query, allowedFilters);
-    //searching
-    searching(filter, search, [
-      "name",
-      "email",
-      "phone"
-    ]);
-    const allowedSortFields = [
-      "name",
-      "email",
-      "phone",
-      "status",
-      "gender",
-      "createdAt"
-    ];
 
+    searching(filter, search, ["name", "email", "phone"]);
+
+    const allowedSortFields = ["name", "email", "phone", "status", "gender", "createdAt"];
     const { sortField } = sorting(sort, allowedSortFields);
-    // Total filtered records
+
     const totalItems = await Member.countDocuments(filter);
-    // Fetch filtered members
-    const { sortField } = sorting(req.query.sort, ['name', 'email', 'createdAt']);
     const members = await Member.find(filter)
       .select(selectedFields)
       .sort(sortField)
       .skip(skip)
       .limit(pageLimit);
-    // Pagination metadata
-    const totalPages = Math.ceil(totalItems / pageLimit);
 
+    const totalPages = Math.ceil(totalItems / pageLimit);
     const hasNextPage = currentPage < totalPages;
     const hasPreviousPage = currentPage > 1;
 
-    res.status(200).json({
-      success: true,
-      data: members,
-      pagination: {
-        page: currentPage,
-        limit: pageLimit,
-        totalItems,
-        totalPages,
-        hasNextPage,
-        hasPreviousPage
-      }
+    apiResponse.success(res, 200, "Members fetched successfully", members, {
+      page: currentPage,
+      limit: pageLimit,
+      totalItems,
+      totalPages,
+      hasNextPage,
+      hasPreviousPage
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch members"
-    });
+    apiResponse.error(res, 500, "Failed to fetch members");
   }
 }

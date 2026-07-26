@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
+const apiResponse = require("../utils/apiResponse");
 
 exports.createUser = async (req, res) => {
   try {
@@ -11,23 +12,23 @@ exports.createUser = async (req, res) => {
     const { username, email, password, role } = req.body;
     const existing = await User.findOne({ $or: [{ email }, { username }] });
     if (existing) {
-      return res.status(400).json({ success: false, message: 'Username or email already exists' });
+      return apiResponse.error(res, 400, 'Username or email already exists');
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ username, email, password: hashedPassword, role });
     const { password: _, ...userData } = user.toObject();
-    res.status(201).json({ success: true, message: 'User created successfully', data: userData });
+    apiResponse.success(res, 201, 'User created successfully', userData);
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    apiResponse.error(res, 500, error.message);
   }
 };
 
 exports.getUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password").sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: users });
+    apiResponse.success(res, 200, "Users fetched successfully", users);
   } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to fetch users" });
+    apiResponse.error(res, 500, "Failed to fetch users");
   }
 };
 
@@ -35,11 +36,11 @@ exports.getUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return apiResponse.error(res, 404, "User not found");
     }
-    res.status(200).json({ success: true, data: user });
+    apiResponse.success(res, 200, "User fetched successfully", user);
   } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to fetch user" });
+    apiResponse.error(res, 500, "Failed to fetch user");
   }
 };
 
@@ -51,11 +52,11 @@ exports.updateUser = async (req, res) => {
     }
     const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true }).select("-password");
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return apiResponse.error(res, 404, "User not found");
     }
-    res.status(200).json({ success: true, message: "User updated successfully", data: user });
+    apiResponse.success(res, 200, "User updated successfully", user);
   } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to update user" });
+    apiResponse.error(res, 500, "Failed to update user");
   }
 };
 
@@ -63,37 +64,22 @@ exports.deleteUser = async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return apiResponse.error(res, 404, "User not found");
     }
-    res.status(200).json({ success: true, message: "User deleted successfully" });
+    apiResponse.success(res, 200, "User deleted successfully");
   } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to delete user" });
+    apiResponse.error(res, 500, "Failed to delete user");
   }
 };
 exports.uploadProfilePicture = async (req, res) => {
-
     if (!req.file) {
-
-        return res.status(400).json({
-            success: false,
-            message: "No file uploaded"
-        });
-
+        return apiResponse.error(res, 400, "No file uploaded");
     }
 
     await User.findByIdAndUpdate(
         req.user.id,
-        {
-            profilePicture: req.file.path
-        }
+        { profilePicture: req.file.path }
     );
 
-    res.json({
-
-        success: true,
-
-        image: req.file.path
-
-    });
-
+    apiResponse.success(res, 200, "Profile picture uploaded", { image: req.file.path });
 };

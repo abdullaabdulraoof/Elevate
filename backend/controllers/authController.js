@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const logger = require('../logger');
+const apiResponse = require('../utils/apiResponse');
 require('dotenv').config();
 
 module.exports.register = async (req, res, next) => {
@@ -20,7 +21,7 @@ module.exports.register = async (req, res, next) => {
 
     if (userExists) {
       logger.warn(`Failed registration attempt for email: ${email}`);
-      return res.status(400).json({ message: "User already exists" });
+      return apiResponse.error(res, 400, "User already exists");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -49,8 +50,7 @@ module.exports.register = async (req, res, next) => {
       { expiresIn: "7d" }
     );
 
-    res.status(201).json({
-      message: "User registered successfully",
+    apiResponse.success(res, 201, "User registered successfully", {
       token,
       memberId: member._id,
       user: {
@@ -62,7 +62,7 @@ module.exports.register = async (req, res, next) => {
     });
     logger.info(`User registered: ${user.email}`);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    apiResponse.error(res, 500, error.message);
     logger.error(`Error occurred while registering user: ${error.message}`);
   }
 };
@@ -82,14 +82,14 @@ module.exports.login = async (req, res,   next) => {
 
     if (!user) {
       logger.warn(`Failed login attempt for email: ${email}`);
-      return res.status(400).json({ message: "Invalid email or password" });
+      return apiResponse.error(res, 400, "Invalid email or password");
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       logger.warn(`Failed login attempt for email: ${user.email}`);
-      return res.status(400).json({ message: "Invalid email or password" });
+      return apiResponse.error(res, 400, "Invalid email or password");
     }
 
     const token = jwt.sign(
@@ -101,8 +101,7 @@ module.exports.login = async (req, res,   next) => {
       { expiresIn: "7d" }
     );
 
-    res.json({
-      message: "Login successful",
+    apiResponse.success(res, 200, "Login successful", {
       token,
       user: {
         id: user._id,
@@ -114,19 +113,19 @@ module.exports.login = async (req, res,   next) => {
     logger.info(`User logged in: ${user.email}`);
   } catch (error) {
     logger.error(`Error occurred while logging in user: ${error.message}`);
-    res.status(500).json({ message: error.message });
+    apiResponse.error(res, 500, error.message);
   }
 }
 module.exports.getProfile = async (req, res, next) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return apiResponse.error(res, 404, 'User not found');
         }
         logger.info(`Profile retrieved for user: ${user.email}`);
-        res.status(200).json({user});
+        apiResponse.success(res, 200, 'Profile retrieved successfully', user);
     } catch (error) {
         logger.error(`Error occurred while fetching user profile: ${error.message}`);
-        res.status(500).json({message:'Server error', error:error.message});
+        apiResponse.error(res, 500, 'Server error');
     }
 }
