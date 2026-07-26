@@ -131,12 +131,20 @@ const getAllMembership = async (req, res) => {
     try {
         const { page, limit } = req.query;
         const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
-        const membership = await Membership.find().skip(skip).limit(limit);
+        // Filtering
+        const allowedFilters = ['status', 'memberId', 'planId'];
+        const filter = {};
+        allowedFilters.forEach((field) => {
+            if (req.query[field]) {
+                filter[field] = req.query[field];
+            }
+        });
+        const membership = await Membership.find(filter).skip(skip).limit(pageLimit);
         //calculate metadata
-        const totalPages = Math.ceil(await Membership.countDocuments() / pageLimit);
+        const totalPages = Math.ceil(await Membership.countDocuments(filter) / pageLimit);
         const hasNextPage = currentPage < totalPages;
         const hasPreviousPage = currentPage > 1;
-        const totalItems = await Membership.countDocuments();
+        const totalItems = await Membership.countDocuments(filter);
         res.status(200).json({
             success: true,
             data: membership,

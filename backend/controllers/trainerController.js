@@ -2,6 +2,7 @@ const Trainer = require("../models/trainer");
 const { validationResult } = require("express-validator");
 const logger = require('../logger');
 const pagination = require("../utils/pagination");
+const sorting = require("../utils/sorting");
 
 exports.getTrainers = async (req, res) => {
   try {
@@ -74,14 +75,31 @@ exports.deleteTrainer = async (req, res) => {
 };
 const getAllTrainers = async (req, res) => {
     try {
-        const { page, limit } = req.query;
+        const { page, limit,sort } = req.query;
         const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
-        const membership = await Trainer.find().skip(skip).limit(limit);
+        //FILTERING
+        const allowedFilters = ['specialization', 'experience'];
+        const filter = {};
+        allowedFilters.forEach((field) => {
+            if (req.query[field]) {
+                filter[field] = req.query[field];
+            }
+        });
+        const allowedSortFields = [
+    "name",
+    "email",
+    "phone",
+    "status",
+    "gender",
+    "createdAt"
+];
+const { sortField } = sorting(sort, allowedSortFields);
+        const membership = await Trainer.find(filter).sort(sortField  ).skip(skip).limit(pageLimit);
         //calculate metadata
-        const totalPages = Math.ceil(await Trainer.countDocuments() / pageLimit);
+        const totalPages = Math.ceil(await Trainer.countDocuments(filter) / pageLimit);
         const hasNextPage = currentPage < totalPages;
         const hasPreviousPage = currentPage > 1;
-        const totalItems = await Trainer.countDocuments();
+        const totalItems = await Trainer.countDocuments(filter);
         res.status(200).json({
             success: true,
             data: Trainer,
