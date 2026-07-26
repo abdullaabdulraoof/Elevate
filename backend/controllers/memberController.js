@@ -3,6 +3,7 @@ const { validationResult } = require('express-validator');
 const notificationQueue = require("../queues/notificationQueue");
 const pagination = require("../utils/pagination");
 const sorting = require("../utils/sorting");
+const searching = require("../utils/searching");
 exports.createMember = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -134,8 +135,9 @@ exports.updateMyPlan = async (req, res) => {
 
 exports.getAllMembers = async (req, res) => {
   try {
-    const { page, limit,sort } = req.query;
+    const { page, limit,sort,searching } = req.query;
     const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
+
     //filtering
     const allowedFilters = ['status', 'gender', 'membershipPlan'];
     const filter = {};
@@ -152,6 +154,12 @@ exports.getAllMembers = async (req, res) => {
     "gender",
     "createdAt"
 ];
+    //searching
+    searching(filter, search, [
+    "name",
+    "email",
+    "phone"
+]);
 const { sortField } = sorting(sort, allowedSortFields);
     // Total filtered records
     const totalItems = await Member.countDocuments(filter);
@@ -159,7 +167,7 @@ const { sortField } = sorting(sort, allowedSortFields);
     const { sortField } = sorting(req.query.sort, ['name', 'email', 'createdAt']);
     const members = await Member.find(filter)
       .sort(sortField)
-      .skip(skip)
+      .skip(skip) 
       .limit(pageLimit);
     // Pagination metadata
     const totalPages = Math.ceil(totalItems / pageLimit);

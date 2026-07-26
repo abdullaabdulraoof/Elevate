@@ -3,6 +3,7 @@ const { validationResult } = require("express-validator");
 const logger = require('../logger');
 const pagination = require("../utils/pagination");
 const sorting = require("../utils/sorting");
+const searching = require("../utils/searching");
 
 exports.getTrainers = async (req, res) => {
   try {
@@ -75,7 +76,7 @@ exports.deleteTrainer = async (req, res) => {
 };
 const getAllTrainers = async (req, res) => {
     try {
-        const { page, limit,sort } = req.query;
+        const { page, limit,sort,searching } = req.query;
         const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
         //FILTERING
         const allowedFilters = ['specialization', 'experience'];
@@ -93,6 +94,13 @@ const getAllTrainers = async (req, res) => {
     "gender",
     "createdAt"
 ];
+//searching
+    //searching
+    searching(filter, search, [
+    "name",
+    "email",
+    "phone"
+]);
 const { sortField } = sorting(sort, allowedSortFields);
         const membership = await Trainer.find(filter).sort(sortField  ).skip(skip).limit(pageLimit);
         //calculate metadata

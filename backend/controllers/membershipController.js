@@ -2,7 +2,8 @@ const Membership = require("../models/membership");
 const validationResult = require('express-validator').validationResult;
 const logger = require('../logger');
 const pagination = require("../utils/pagination");
-
+const sorting = require("../utils/sorting");
+const searching = require("../utils/searching");
 exports.createMembership = async (req, res) => {
     try {
         const membership = await Membership.create(req.body);
@@ -129,7 +130,7 @@ exports.deleteMembership = async (req, res) => {
 
 const getAllMembership = async (req, res) => {
     try {
-        const { page, limit } = req.query;
+        const { page, limit,sort, searching } = req.query;
         const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
         // Filtering
         const allowedFilters = ['status', 'memberId', 'planId'];
@@ -139,22 +140,44 @@ const getAllMembership = async (req, res) => {
                 filter[field] = req.query[field];
             }
         });
-        const membership = await Membership.find(filter).skip(skip).limit(pageLimit);
+         const allowedSortFields = [
+    "name",
+    "email",
+    "phone",
+    "status",
+    "gender",
+    "createdAt"
+];
+ //searching
+    searching(filter, search, [
+    "name",
+    "email",
+    "phone"
+]);
+const { sortField } = sorting(sort, allowedSortFields);
+// Total filtered records
+    const totalItems = await Membership.countDocuments(filter);
+    // Fetch filtered members
+    const { sortField } = sorting(req.query.sort, ['name', 'email', 'createdAt']);
+        const membership = await Membership.find(filter)
+      .sort(sortField)
+      .skip(skip) 
+      .limit(pageLimit);
         //calculate metadata
-        const totalPages = Math.ceil(await Membership.countDocuments(filter) / pageLimit);
+        const totalPages = Math.ceil(totalItems / pageLimit);
         const hasNextPage = currentPage < totalPages;
         const hasPreviousPage = currentPage > 1;
-        const totalItems = await Membership.countDocuments(filter);
         res.status(200).json({
             success: true,
             data: membership,
             pagintion: {
                 page: currentPage,
                 limit: pageLimit,
+                totalItems,
                 totalPages,
                 hasNextPage,
-                hasPreviousPage,
-                totalItems
+                hasPreviousPage
+                
             }
         });
     } catch (error) {
