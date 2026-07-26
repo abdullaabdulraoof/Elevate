@@ -4,6 +4,7 @@ const logger = require('../logger');
 const pagination = require("../utils/pagination");
 const sorting = require("../utils/sorting");
 const searching = require("../utils/searching");
+const filtering = require("../utils/filtering");
 
 exports.getTrainers = async (req, res) => {
   try {
@@ -75,55 +76,50 @@ exports.deleteTrainer = async (req, res) => {
   }
 };
 const getAllTrainers = async (req, res) => {
-    try {
-        const { page, limit,sort,searching } = req.query;
-        const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
-        //FILTERING
-        const allowedFilters = ['specialization', 'experience'];
-        const filter = {};
-        allowedFilters.forEach((field) => {
-            if (req.query[field]) {
-                filter[field] = req.query[field];
-            }
-        });
-        const allowedSortFields = [
-    "name",
-    "email",
-    "phone",
-    "status",
-    "gender",
-    "createdAt"
-];
-//searching
+  try {
+    const { page, limit, sort, searching } = req.query;
+    const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
+    //FILTERING
+    const allowedFilters = ['specialization', 'experience'];
+    const filter = filtering(req.query, allowedFilters);
+
     //searching
     searching(filter, search, [
-    "name",
-    "email",
-    "phone"
-]);
-const { sortField } = sorting(sort, allowedSortFields);
-        const membership = await Trainer.find(filter).sort(sortField  ).skip(skip).limit(pageLimit);
-        //calculate metadata
-        const totalPages = Math.ceil(await Trainer.countDocuments(filter) / pageLimit);
-        const hasNextPage = currentPage < totalPages;
-        const hasPreviousPage = currentPage > 1;
-        const totalItems = await Trainer.countDocuments(filter);
-        res.status(200).json({
-            success: true,
-            data: Trainer,
-            pagintion: {
-                page: currentPage,
-                limit: pageLimit,
-                totalPages,
-                hasNextPage,
-                hasPreviousPage,
-                totalItems
-            }
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch members"
-        });
-    }
+      "name",
+      "email",
+      "phone"
+    ]);
+    const allowedSortFields = [
+      "name",
+      "email",
+      "phone",
+      "status",
+      "gender",
+      "createdAt"
+    ];
+    const { sortField } = sorting(sort, allowedSortFields);
+    const membership = await Trainer.find(filter).sort(sortField).skip(skip).limit(pageLimit);
+    //calculate metadata
+    const totalPages = Math.ceil(await Trainer.countDocuments(filter) / pageLimit);
+    const hasNextPage = currentPage < totalPages;
+    const hasPreviousPage = currentPage > 1;
+    const totalItems = await Trainer.countDocuments(filter);
+    res.status(200).json({
+      success: true,
+      data: Trainer,
+      pagintion: {
+        page: currentPage,
+        limit: pageLimit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+        totalItems
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch members"
+    });
+  }
 }

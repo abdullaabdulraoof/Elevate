@@ -4,6 +4,7 @@ const notificationQueue = require("../queues/notificationQueue");
 const pagination = require("../utils/pagination");
 const sorting = require("../utils/sorting");
 const searching = require("../utils/searching");
+const filtering = require("../utils/filtering");
 exports.createMember = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -135,39 +136,35 @@ exports.updateMyPlan = async (req, res) => {
 
 exports.getAllMembers = async (req, res) => {
   try {
-    const { page, limit,sort,searching } = req.query;
+    const { page, limit, sort, searching } = req.query;
     const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
 
     //filtering
     const allowedFilters = ['status', 'gender', 'membershipPlan'];
-    const filter = {};
-    allowedFilters.forEach((field) => {
-      if (req.query[field]) {
-        filter[field] = req.query[field];
-      }
-    });
-    const allowedSortFields = [
-    "name",
-    "email",
-    "phone",
-    "status",
-    "gender",
-    "createdAt"
-];
+    const filter = filtering(req.query, allowedFilters);
     //searching
     searching(filter, search, [
-    "name",
-    "email",
-    "phone"
-]);
-const { sortField } = sorting(sort, allowedSortFields);
+      "name",
+      "email",
+      "phone"
+    ]);
+    const allowedSortFields = [
+      "name",
+      "email",
+      "phone",
+      "status",
+      "gender",
+      "createdAt"
+    ];
+
+    const { sortField } = sorting(sort, allowedSortFields);
     // Total filtered records
     const totalItems = await Member.countDocuments(filter);
     // Fetch filtered members
     const { sortField } = sorting(req.query.sort, ['name', 'email', 'createdAt']);
     const members = await Member.find(filter)
       .sort(sortField)
-      .skip(skip) 
+      .skip(skip)
       .limit(pageLimit);
     // Pagination metadata
     const totalPages = Math.ceil(totalItems / pageLimit);

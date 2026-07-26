@@ -4,6 +4,7 @@ const logger = require('../logger');
 const pagination = require("../utils/pagination");
 const sorting = require("../utils/sorting");
 const searching = require("../utils/searching");
+const filtering = require("../utils/filtering");
 exports.createMembership = async (req, res) => {
     try {
         const membership = await Membership.create(req.body);
@@ -130,39 +131,39 @@ exports.deleteMembership = async (req, res) => {
 
 const getAllMembership = async (req, res) => {
     try {
-        const { page, limit,sort, searching } = req.query;
+        const { page, limit, sort, searching } = req.query;
         const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
         // Filtering
-        const allowedFilters = ['status', 'memberId', 'planId'];
-        const filter = {};
-        allowedFilters.forEach((field) => {
-            if (req.query[field]) {
-                filter[field] = req.query[field];
-            }
-        });
-         const allowedSortFields = [
-    "name",
-    "email",
-    "phone",
-    "status",
-    "gender",
-    "createdAt"
-];
- //searching
-    searching(filter, search, [
-    "name",
-    "email",
-    "phone"
-]);
-const { sortField } = sorting(sort, allowedSortFields);
-// Total filtered records
-    const totalItems = await Membership.countDocuments(filter);
-    // Fetch filtered members
-    const { sortField } = sorting(req.query.sort, ['name', 'email', 'createdAt']);
+        const allowedFilters = [
+            "status",
+            "gender",
+            "membershipPlan"
+        ];
+
+        const filter = filtering(req.query, allowedFilters);
+        //searching
+        searching(filter, search, [
+            "name",
+            "email",
+            "phone"
+        ]);
+        const allowedSortFields = [
+            "name",
+            "email",
+            "phone",
+            "status",
+            "gender",
+            "createdAt"
+        ];
+        const { sortField } = sorting(sort, allowedSortFields);
+        // Total filtered records
+        const totalItems = await Membership.countDocuments(filter);
+        // Fetch filtered members
+        const { sortField } = sorting(req.query.sort, ['name', 'email', 'createdAt']);
         const membership = await Membership.find(filter)
-      .sort(sortField)
-      .skip(skip) 
-      .limit(pageLimit);
+            .sort(sortField)
+            .skip(skip)
+            .limit(pageLimit);
         //calculate metadata
         const totalPages = Math.ceil(totalItems / pageLimit);
         const hasNextPage = currentPage < totalPages;
@@ -177,7 +178,7 @@ const { sortField } = sorting(sort, allowedSortFields);
                 totalPages,
                 hasNextPage,
                 hasPreviousPage
-                
+
             }
         });
     } catch (error) {
