@@ -5,6 +5,7 @@ const pagination = require("../utils/pagination");
 const sorting = require("../utils/sorting");
 const searching = require("../utils/searching");
 const filtering = require("../utils/filtering");
+const fieldSelection = require("../utils/fieldSelection");
 exports.createMembership = async (req, res) => {
     try {
         const membership = await Membership.create(req.body);
@@ -131,8 +132,21 @@ exports.deleteMembership = async (req, res) => {
 
 const getAllMembership = async (req, res) => {
     try {
-        const { page, limit, sort, searching } = req.query;
+        const { page, limit, sort, searching, fields } = req.query;
         const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
+
+        const allowedFields = [
+            "name",
+            "email",
+            "phone",
+            "gender",
+            "status",
+            "membershipPlan",
+            "createdAt"
+        ]; const selectedFields = fieldSelection(
+            fields,
+            allowedFields
+        );
         // Filtering
         const allowedFilters = [
             "status",
@@ -161,6 +175,7 @@ const getAllMembership = async (req, res) => {
         // Fetch filtered members
         const { sortField } = sorting(req.query.sort, ['name', 'email', 'createdAt']);
         const membership = await Membership.find(filter)
+            .select(selectedFields)
             .sort(sortField)
             .skip(skip)
             .limit(pageLimit);

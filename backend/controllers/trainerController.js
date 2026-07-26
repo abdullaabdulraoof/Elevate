@@ -5,7 +5,7 @@ const pagination = require("../utils/pagination");
 const sorting = require("../utils/sorting");
 const searching = require("../utils/searching");
 const filtering = require("../utils/filtering");
-
+const fieldSelection = require("../utils/fieldSelection");
 exports.getTrainers = async (req, res) => {
   try {
     const trainers = await Trainer.find().populate("userId", "username email");
@@ -77,8 +77,21 @@ exports.deleteTrainer = async (req, res) => {
 };
 const getAllTrainers = async (req, res) => {
   try {
-    const { page, limit, sort, searching } = req.query;
+    const { page, limit, sort, searching, fields } = req.query;
     const { skip, page: currentPage, limit: pageLimit } = pagination(page, limit);
+    const allowedFields = [
+      "name",
+      "email",
+      "phone",
+      "gender",
+      "status",
+      "membershipPlan",
+      "createdAt"
+    ];
+    const selectedFields = fieldSelection(
+      fields,
+      allowedFields
+    );
     //FILTERING
     const allowedFilters = ['specialization', 'experience'];
     const filter = filtering(req.query, allowedFilters);
@@ -98,7 +111,7 @@ const getAllTrainers = async (req, res) => {
       "createdAt"
     ];
     const { sortField } = sorting(sort, allowedSortFields);
-    const membership = await Trainer.find(filter).sort(sortField).skip(skip).limit(pageLimit);
+    const membership = await Trainer.find(filter).select(selectedFields).sort(sortField).skip(skip).limit(pageLimit);
     //calculate metadata
     const totalPages = Math.ceil(await Trainer.countDocuments(filter) / pageLimit);
     const hasNextPage = currentPage < totalPages;
