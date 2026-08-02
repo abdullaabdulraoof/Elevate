@@ -28,14 +28,12 @@ const cache = (prefix, ttl = 300) => {
             // Override res.json
             res.json = async (body) => {
                 try {
-                    await redis.set(
-                        key,
-                        JSON.stringify(body),
-                        "EX",
-                        ttl
-                    );
+                    await redis.set(key, JSON.stringify(body), "EX", ttl);
 
-                    console.log(`📦 Cached -> ${key} (${ttl}s)`);
+                    const saved = await redis.get(key);
+
+                    console.log("Saved Value:", saved);
+                    console.log(`📦 Cached -> ${key}`);
                 } catch (err) {
                     console.error("Redis Cache Save Error:", err.message);
                 }

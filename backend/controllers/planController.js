@@ -12,7 +12,11 @@ exports.createPlan = async (req, res) => {
     const plan = await Plan.create(req.body);
     apiResponse.success(res, 201, "Plan created successfully", plan);
     // Invalidate the plans cache
-    await redis.del("plans");
+    const keys = await redis.keys("plans:*");
+
+    if (keys.length) {
+      await redis.del(keys);
+    }
   } catch (error) {
     apiResponse.error(res, 500, "Failed to create plan");
   }
