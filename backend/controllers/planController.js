@@ -1,6 +1,7 @@
 const Plan = require("../models/plans");
 const { validationResult } = require("express-validator");
 const apiResponse = require("../utils/apiResponse");
+const redis = require("../config/redis");
 
 exports.createPlan = async (req, res) => {
   try {
@@ -10,6 +11,8 @@ exports.createPlan = async (req, res) => {
     }
     const plan = await Plan.create(req.body);
     apiResponse.success(res, 201, "Plan created successfully", plan);
+    // Invalidate the plans cache
+    await redis.del("plans");
   } catch (error) {
     apiResponse.error(res, 500, "Failed to create plan");
   }
