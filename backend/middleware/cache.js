@@ -7,10 +7,13 @@ const cache = (prefix, ttl = 300) => {
             // Create unique cache key
             // Example:
             // plans:/api/v1/plans?page=1&limit=10
+            console.log("🔥 Cache middleware executed");
             const key = `${prefix}:${req.originalUrl}`;
+            console.log("Cache Key:", key);
 
             // Check Redis
             const cachedData = await redis.get(key);
+            console.log("Cached Data:", cachedData);
 
             if (cachedData) {
                 console.log(`✅ Cache HIT -> ${key}`);
