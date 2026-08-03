@@ -26,7 +26,11 @@ router.post(
   createPlan
 );
 
-router.get("/", cache("plans"), getPlans);
+router.get(
+  "/",
+  cache("plans"),
+  getPlans
+);
 
 router.get(
   "/:id",

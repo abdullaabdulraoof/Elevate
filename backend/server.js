@@ -7,6 +7,9 @@ const logger = require("./logger");
 // Force Redis initialization
 require("./config/redis");
 
+// Start background workers
+require("./workers/notificationWorker");
+
 const PORT = process.env.PORT || 3000;
 
 connectDB();

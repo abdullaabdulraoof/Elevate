@@ -1,6 +1,7 @@
 const Member = require("../models/member");
 const { validationResult } = require('express-validator');
 const notificationQueue = require("../queues/notificationQueue");
+const logger = require("../logger");
 const pagination = require("../utils/pagination");
 const sorting = require("../utils/sorting");
 const searching = require("../utils/searching");
@@ -14,12 +15,16 @@ exports.createMember = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
     const member = await Member.create(req.body);
-    // Add notification job to Redis queue
-    await notificationQueue.add("member-created", {
-      userId: member._id,
-      title: "Welcome to Elevate Gym",
-      message: "Your membership has been created successfully."
-    });
+    // Add notification job to Redis queue (non-fatal if queueing fails)
+    try {
+      await notificationQueue.add("member-created", {
+        userId: member._id,
+        title: "Welcome to Elevate Gym",
+        message: "Your membership has been created successfully."
+      });
+    } catch (error) {
+      logger.warn(`Failed to enqueue notification for member ${member._id}: ${error.message}`);
+    }
 
     apiResponse.success(
       res,

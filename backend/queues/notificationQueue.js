@@ -1,11 +1,12 @@
 const { Queue } = require("bullmq");
 const redis = require("../config/redis");
 
-let notificationQueue= null;
-if (process.env.NODE_ENV === "production") {
-    notificationQueue = new Queue("notifications", {
-        connection: redis
-    });
-}
+const notificationQueue = new Queue("notifications", {
+    connection: redis,
+    defaultJobOptions: {
+        removeOnComplete: 100,
+        removeOnFail: 500,
+    },
+});
 
 module.exports = notificationQueue;
